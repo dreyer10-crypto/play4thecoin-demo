@@ -53,15 +53,20 @@ header.topbar {
   background: rgba(10,10,10,.6); backdrop-filter: blur(6px);
   position: sticky; top: 0; z-index: 20;
 }
-.brand { display: flex; flex-direction: column; gap: 3px; }
+.brand { display: flex; flex-direction: row; align-items: center; gap: 12px; }
+.brand .brand-mark { height: 46px; width: auto; display: block; }
 .brand .wordmark { font-family: 'Anton', sans-serif; text-transform: uppercase; letter-spacing: .02em; font-size: 22px; color: var(--cream); }
 .brand .wordmark span { color: var(--gold); }
-.brand .sub { font-family: 'Oswald', sans-serif; text-transform: uppercase; letter-spacing: .28em; font-size: 9px; color: var(--grey); }
+.brand .sub { font-family: 'Oswald', sans-serif; text-transform: uppercase; letter-spacing: .28em; font-size: 9px; color: var(--grey); margin-top: 3px; }
+.powered-slot { display: inline-flex; align-items: center; gap: 5px; vertical-align: middle; }
+.powered-logo { height: 14px; width: auto; vertical-align: middle; }
 .headline-badge {
+  display: inline-flex; align-items: center; gap: 8px;
   font-family: 'Oswald', sans-serif; text-transform: uppercase; letter-spacing: .2em; font-size: 11px;
   color: var(--ink); background: linear-gradient(180deg, var(--gold-l), var(--gold)); padding: 7px 14px; border-radius: 2px; font-weight: 600;
 }
-.headline-badge small { display: block; font-size: 8px; letter-spacing: .26em; color: var(--gold-d); }
+.headline-logo { height: 22px; width: auto; display: block; }
+.headline-text small { display: block; font-size: 8px; letter-spacing: .26em; color: var(--gold-d); }
 
 nav.tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 12px 20px; border-bottom: 1px solid var(--line); }
 nav.tabs button {
@@ -173,7 +178,7 @@ tr.focus td { background: rgba(201,169,97,.14); }
 td .target { cursor: pointer; color: var(--gold); font-size: 11px; font-family: 'Oswald', sans-serif; letter-spacing: .08em; }
 
 /* ---------- Player profile photo / avatar ---------- */
-.hidden { display: none !important; }
+.hidden, [hidden] { display: none !important; }
 .topbar-right { display: flex; align-items: center; gap: 14px; }
 .avatar {
   width: 38px; height: 38px; border-radius: 50%; flex: 0 0 auto;
@@ -200,19 +205,75 @@ td .target { cursor: pointer; color: var(--gold); font-size: 11px; font-family: 
 .profile-chip .avatar { width: 30px; height: 30px; font-size: 12px; }
 @media (max-width: 560px) { .profile-chip span { display: none; } }
 
+/* ---------- GPS rangefinder ---------- */
+.pill.live { background: rgba(52,168,106,.15); color: var(--green); border-color: var(--green); }
+.gps-target { text-align: center; }
+.gps-target .stat { font-size: 26px; margin: 4px 0 8px; }
+.gps-target.set { border-color: var(--gold-d); }
+.gps-target.set .stat { color: var(--gold); }
+.gps-target .ghost { font-size: 11px; padding: 5px 10px; }
+
+/* ---------- Collectible coin showcase ---------- */
+.coin-grid { display: flex; flex-wrap: wrap; gap: 22px; margin-top: 8px; }
+.coin-card { width: 230px; max-width: 46vw; }
+.coin-wrap { filter: drop-shadow(0 8px 18px rgba(0,0,0,.45)); }
+.coin-svg { display: block; }
+.coin-svg.locked { filter: grayscale(.5); }
+.coin-meta { text-align: center; margin-top: 12px; }
+.coin-meta .label { color: var(--cream); font-size: 13px; }
+.coin-meta .pill { margin-top: 8px; }
+
+/* ---------- Hole map + camera aim ---------- */
+.gps-layout { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+.holemap-wrap { width: 300px; max-width: 90vw; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #0f2c1b; }
+.holemap { display: block; }
+.gps-side { flex: 1; min-width: 280px; }
+.gps-side .card { max-width: none; }
+@media (max-width: 680px) { .holemap-wrap { width: 100%; } }
+
+.cam-overlay { position: fixed; inset: 0; z-index: 60; background: #000; }
+.cam-overlay video { width: 100%; height: 100%; object-fit: cover; }
+.cam-hud { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 18px; pointer-events: none; }
+.cam-top { width: 100%; display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
+.cam-top .pill { background: rgba(0,0,0,.5); color: var(--gold); }
+.cam-top .ghost { background: rgba(0,0,0,.5); }
+.cam-reticle { color: rgba(255,255,255,.85); font-size: 46px; text-shadow: 0 0 8px #000; margin-top: auto; }
+.cam-readout {
+  margin-top: auto; font-family: 'Anton', sans-serif; font-size: 40px; color: #fff;
+  background: linear-gradient(180deg, rgba(201,169,97,.92), rgba(148,114,47,.92)); color: var(--ink);
+  padding: 10px 26px; border-radius: 6px; letter-spacing: .02em; text-shadow: none;
+}
+
+/* hole map inside the live round focus panel */
+.round-hole { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; margin: 10px 0; }
+.round-map { width: 220px; max-width: 100%; }
+.round-tracer { flex: 1; min-width: 220px; }
+
 </style>
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
-      <div class="wordmark">PLAY4<span>THE</span>COIN</div>
-      <div class="sub">Championship Series · Powered by Compleat Golfer</div>
+      <img class="brand-mark" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJQbGF5NFRoZUNvaW4iPgogIDxkZWZzPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJwNHRjR29sZCIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNlZmQ5YTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYzlhOTYxIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8IS0tIGNvaW4gYm9keSAtLT4KICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjYwIiByPSI1NSIgZmlsbD0iIzBhMGEwYSIgc3Ryb2tlPSJ1cmwoI3A0dGNHb2xkKSIgc3Ryb2tlLXdpZHRoPSI1Ii8+CiAgPGNpcmNsZSBjeD0iNjAiIGN5PSI2MCIgcj0iNDYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzk0NzIyZiIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICA8IS0tIHJlZWRlZCBlZGdlIHRpY2tzIC0tPgogIDxnIHN0cm9rZT0iIzk0NzIyZiIgc3Ryb2tlLXdpZHRoPSIyIj4KICAgIDxsaW5lIHgxPSI2MCIgeTE9IjYiIHgyPSI2MCIgeTI9IjEzIi8+CiAgICA8bGluZSB4MT0iNjAiIHkxPSIxMDciIHgyPSI2MCIgeTI9IjExNCIvPgogICAgPGxpbmUgeDE9IjYiIHkxPSI2MCIgeDI9IjEzIiB5Mj0iNjAiLz4KICAgIDxsaW5lIHgxPSIxMDciIHkxPSI2MCIgeDI9IjExNCIgeTI9IjYwIi8+CiAgPC9nPgogIDwhLS0gYmlnICI0IiAtLT4KICA8dGV4dCB4PSI2MCIgeT0iNzgiIGZvbnQtZmFtaWx5PSJBbnRvbiwgQXJpYWwgQmxhY2ssIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iNjIiIGZvbnQtd2VpZ2h0PSI3MDAiCiAgICAgICAgZmlsbD0idXJsKCNwNHRjR29sZCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiPjQ8L3RleHQ+CiAgPCEtLSBnb2xmIGZsYWcgb24gdGhlIGdyZWVuIC0tPgogIDxnIHN0cm9rZT0idXJsKCNwNHRjR29sZCkiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj4KICAgIDxsaW5lIHgxPSI4OCIgeTE9IjMwIiB4Mj0iODgiIHkyPSI1NSIvPgogIDwvZz4KICA8cGF0aCBkPSJNODggMzEgTDEwMSAzNiBMODggNDEgWiIgZmlsbD0idXJsKCNwNHRjR29sZCkiLz4KICA8IS0tIFA0VEMgd29yZGJhbmQgLS0+CiAgPHBhdGggZD0iTTIyIDkyIEE0NiA0NiAwIDAgMCA5OCA5MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTQ3MjJmIiBzdHJva2Utd2lkdGg9IjAuNzUiLz4KICA8dGV4dCB4PSI2MCIgeT0iMTAzIiBmb250LWZhbWlseT0iT3N3YWxkLCBBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgbGV0dGVyLXNwYWNpbmc9IjMiCiAgICAgICAgZmlsbD0iI2Y0ZjFlYSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UExBWTRUSEVDT0lOPC90ZXh0Pgo8L3N2Zz4K" alt="Play4TheCoin" onerror="this.remove()" />
+      <div>
+        <div class="wordmark">PLAY4<span>THE</span>COIN</div>
+        <div class="sub">Championship Series · Powered by
+          <span class="powered-slot">
+            <img class="powered-logo" src="assets/logo-compleat-golfer.png" alt="Compleat Golfer"
+                 onload="var t=this.parentElement.querySelector('.powered-text'); if(t) t.style.display='none'"
+                 onerror="this.remove()" />
+            <span class="powered-text">Compleat Golfer</span>
+          </span>
+        </div>
+      </div>
     </div>
     <div class="topbar-right">
       <div class="profile-chip" id="profileChip" hidden></div>
       <div class="headline-badge">
-        Lexus South Africa
-        <small>Headline Sponsor</small>
+        <img class="headline-logo" src="assets/logo-lexus.svg" alt="Lexus"
+             onload="var t=this.parentElement.querySelector('.headline-text'); if(t) t.style.display='none'"
+             onerror="this.remove()" />
+        <span class="headline-text">Lexus South Africa<small>Headline Sponsor</small></span>
       </div>
     </div>
   </header>
@@ -1031,6 +1092,7 @@ function __route(method, rawPath, body) {
   if (method === 'POST' && seg[0] === 'activate') return { coin: data.activateCoin(s, body.coinId, body.userId) };
   if (method === 'POST' && seg[0] === 'score' && seg[1] === 'verify') { var vsc = data.verifyScore(s, body.scoreId, body.confirmer); return { score: vsc, points: (s.users.find(function(u){return u.id===vsc.userId;})||{}).points }; }
   if (method === 'POST' && seg[0] === 'score') { var sc = data.recordScore(s, body.userId, body.courseId, body.stableford); return { score: sc, points: (s.users.find(function(u){return u.id===body.userId;})||{}).points }; }
+  if (method === 'GET' && seg[0] === 'sponsor') return data.sponsorDashboard(s, seg[1] || 'lexus');
   if (method === 'GET' && seg[0] === 'admin') return data.adminDashboard(s);
   if (method === 'GET' && seg[0] === 'course' && seg[1]) { var cd = data.getCourseDetail(s, seg[1]); if (!cd) throw new Error('Unknown course'); return cd; }
   if (method === 'POST' && seg[0] === 'round' && seg[1] === 'start') return data.startRound(s, body.userId, body.courseId);
@@ -1140,11 +1202,154 @@ function wirePhotoField(id) {
 }
 function getPhoto(id) { const p = document.getElementById(id + '-preview'); return (p && p.dataset.photo) || null; }
 
+/* ---------- Hole map (plan view, Score-Capture style) ----------
+   We don't have surveyed hole geometry, so the corridor shape (straight / dogleg) is
+   derived deterministically per hole and the real par/metres/hazards are laid onto it.
+   Clearly flagged as a representative layout; production swaps in mapped coordinates. */
+function holeShape(courseId, h) {
+  if (h.par === 3) return 'straight';
+  const seed = (h.hole * 7 + (h.strokeIndex || 0) + courseId.length) % 3;
+  return seed === 1 ? 'left' : seed === 2 ? 'right' : 'straight';
+}
+function _poly(pts) {
+  const seg = []; let total = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const dx = pts[i][0] - pts[i - 1][0], dy = pts[i][1] - pts[i - 1][1], len = Math.hypot(dx, dy);
+    seg.push({ a: pts[i - 1], b: pts[i], len, acc: total }); total += len;
+  }
+  return { seg, total };
+}
+function _posAt(poly, frac) {
+  const target = Math.max(0, Math.min(1, frac)) * poly.total;
+  for (const s of poly.seg) if (target <= s.acc + s.len) { const t = s.len ? (target - s.acc) / s.len : 0; return [s.a[0] + (s.b[0] - s.a[0]) * t, s.a[1] + (s.b[1] - s.a[1]) * t]; }
+  const last = poly.seg[poly.seg.length - 1]; return [last.b[0], last.b[1]];
+}
+function _normal(poly, frac) {
+  const p = _posAt(poly, frac), p2 = _posAt(poly, Math.min(1, frac + 0.01));
+  const dx = p2[0] - p[0], dy = p2[1] - p[1], L = Math.hypot(dx, dy) || 1;
+  return { p, nx: -dy / L, ny: dx / L };
+}
+function holeMapSvg(course, h) {
+  const W = 320, H = 470, cx = W / 2, teeY = H - 38, grY = 54;
+  const shape = holeShape(course.id, h);
+  const pts = shape === 'straight' ? [[cx, teeY], [cx, grY]]
+    : shape === 'left' ? [[cx + 36, teeY], [cx + 46, H * 0.54], [cx - 56, grY]]
+    : [[cx - 36, teeY], [cx - 46, H * 0.54], [cx + 56, grY]];
+  const poly = _poly(pts), total = h.distanceMeters || 380;
+  const path = 'M' + pts.map(p => `${p[0].toFixed(0)} ${p[1].toFixed(0)}`).join(' L');
+  let trees = '';
+  for (let f = 0.06; f < 0.97; f += 0.055) {
+    const { p, nx, ny } = _normal(poly, f), off = 44;
+    for (const s of [1, -1]) trees += `<circle cx="${(p[0] + nx * off * s).toFixed(0)}" cy="${(p[1] + ny * off * s).toFixed(0)}" r="6" fill="#1c4e2e"/>`;
+  }
+  let haz = '';
+  (h.hazards || []).forEach((hz, i) => {
+    const f = Math.max(0.05, Math.min(0.95, hz.fromTee / total)), { p, nx, ny } = _normal(poly, f);
+    if (hz.type === 'water') haz += `<ellipse cx="${p[0].toFixed(0)}" cy="${p[1].toFixed(0)}" rx="24" ry="13" fill="#2f6fb0"/>`;
+    else { const s = i % 2 ? 1 : -1; haz += `<ellipse cx="${(p[0] + nx * 16 * s).toFixed(0)}" cy="${(p[1] + ny * 16 * s).toFixed(0)}" rx="11" ry="8" fill="#dcc78d"/>`; }
+  });
+  let marks = '';
+  [200, 150, 100].forEach(m => {
+    if (total > m + 30) { const p = _posAt(poly, (total - m) / total);
+      marks += `<line x1="${(p[0] - 28).toFixed(0)}" y1="${p[1].toFixed(0)}" x2="${(p[0] + 28).toFixed(0)}" y2="${p[1].toFixed(0)}" stroke="#fff" stroke-width="1" stroke-dasharray="3 3" opacity="0.45"/><text x="${(p[0] + 32).toFixed(0)}" y="${(p[1] + 3).toFixed(0)}" font-size="10" fill="#cfe8d6" font-family="Oswald,sans-serif">${m}</text>`; }
+  });
+  const tee = pts[0], green = pts[pts.length - 1];
+  const label = shape === 'left' ? '◀ Dogleg left' : shape === 'right' ? 'Dogleg right ▶' : 'Straight';
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" class="holemap" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hole ${h.hole} map">
+    <rect width="${W}" height="${H}" fill="#0f2c1b"/>
+    <path d="${path}" stroke="#356f47" stroke-width="46" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="${path}" stroke="#4a9b61" stroke-width="34" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    ${trees}${haz}${marks}
+    <ellipse cx="${green[0]}" cy="${green[1]}" rx="26" ry="20" fill="#79d691"/>
+    <line x1="${green[0]}" y1="${green[1]}" x2="${green[0]}" y2="${green[1] - 26}" stroke="#f4f1ea" stroke-width="1.5"/>
+    <path d="M${green[0]} ${green[1] - 26} l10 4 l-10 4 z" fill="#d23b3b"/>
+    <rect x="${tee[0] - 10}" y="${tee[1] - 5}" width="20" height="10" rx="2" fill="#cdbbb6"/>
+    <circle cx="${tee[0]}" cy="${tee[1]}" r="3" fill="#0f2c1b"/>
+    <text x="12" y="24" font-size="13" fill="#f4f1ea" font-family="Anton,sans-serif">HOLE ${h.hole}</text>
+    <text x="12" y="40" font-size="10" fill="#cfe8d6" font-family="Oswald,sans-serif" letter-spacing="1">PAR ${h.par} · ${total}m · SI ${h.strokeIndex}</text>
+    <text x="${W - 12}" y="24" font-size="11" fill="#efd9a0" font-family="Oswald,sans-serif" letter-spacing="1" text-anchor="end">${label}</text>
+  </svg>`;
+}
+
+/* ---------- Live GPS rangefinder (real phone geolocation) ---------- */
+const geo = { watchId: null, pos: null, acc: null };
+// Great-circle distance between two {lat,lng} points, in metres (haversine).
+function metresBetween(a, b) {
+  const R = 6371000, rad = d => d * Math.PI / 180;
+  const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+function stopGeo() {
+  if (geo.watchId != null && navigator.geolocation) navigator.geolocation.clearWatch(geo.watchId);
+  geo.watchId = null;
+}
+// Camera viewfinder ("aim at the hole"): live rear-camera feed with the GPS distance overlaid.
+let camStream = null;
+function stopCam() {
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  const ov = document.getElementById('camOverlay'); if (ov) ov.classList.add('hidden');
+}
+// Marked points (green/tee/pin) are stored per course+hole in localStorage so a demo
+// "calibration walk" persists. On a production course these come pre-surveyed instead.
+function marksKey(courseId, hole) { return `p4tc_gps_${courseId}_${hole}`; }
+function loadMarks(courseId, hole) { try { return JSON.parse(localStorage.getItem(marksKey(courseId, hole)) || '{}'); } catch { return {}; } }
+function saveMarks(courseId, hole, marks) { localStorage.setItem(marksKey(courseId, hole), JSON.stringify(marks)); }
+
+/* ---------- Collectible coin renderer (SVG, scorecard ring) ----------
+   Mirrors the real enamel coins: a metallic rim carrying the hole-by-hole scorecard
+   (#hole · PAR · metres), a course-coloured enamel centre with the course name + signature
+   hole, and Play4TheCoin on the face — all drawn from the verified course data. */
+const COIN_FACE = {
+  'de-zalze':     { enamel: '#1d6b4f', ink: '#f4f1ea' },
+  'royal-jhb':    { enamel: '#15264d', ink: '#f4f1ea' },
+  'st-francis':   { enamel: '#e8e3d8', ink: '#15264d' },
+  'mt-edge':      { enamel: '#1d63b5', ink: '#f4f1ea' },
+  'blair-atholl': { enamel: '#0c0c0c', ink: '#efd9a0' },
+};
+function courseCoinSvg(course, holes, opts = {}) {
+  const size = opts.size || 230, c = size / 2;
+  const rRim = c - 3, rTrack = c - 26, rInner = c - 30;
+  const face = COIN_FACE[course.id] || { enamel: '#15264d', ink: '#f4f1ea' };
+  const locked = !!opts.locked;
+  let ring = '';
+  for (let i = 0; i < 18; i++) {
+    const frac = i / 18, a = frac * 2 * Math.PI - Math.PI / 2, deg = frac * 360;
+    const h = (holes && holes[i]) || {};
+    const x1 = c + Math.cos(a) * rRim, y1 = c + Math.sin(a) * rRim;
+    const x2 = c + Math.cos(a) * rInner, y2 = c + Math.sin(a) * rInner;
+    ring += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#94722f" stroke-width="0.5"/>`;
+    const lr = (rRim + rInner) / 2, lx = c + Math.cos(a) * lr, ly = c + Math.sin(a) * lr;
+    const label = `${i + 1}·P${h.par || ''}`;
+    ring += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" font-size="7" fill="#3a3024" text-anchor="middle" dominant-baseline="central" font-family="Oswald,sans-serif" transform="rotate(${deg.toFixed(1)} ${lx.toFixed(1)} ${ly.toFixed(1)})">${label}</text>`;
+  }
+  const name = (course.name || '').toUpperCase();
+  const nameLines = name.length > 14 ? name.replace(/ /, '\n').split('\n') : [name];
+  const nameSvg = nameLines.map((ln, k) =>
+    `<text x="${c}" y="${c - 6 + k * 15}" font-size="${name.length > 18 ? 12 : 14}" fill="${face.ink}" text-anchor="middle" font-family="Anton,sans-serif" letter-spacing="0.5">${ln}</text>`).join('');
+  return `<svg viewBox="0 0 ${size} ${size}" width="100%" class="coin-svg ${locked ? 'locked' : ''}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${course.name} coin">
+    <defs><radialGradient id="rim-${course.id}" cx="50%" cy="40%" r="65%">
+      <stop offset="0" stop-color="#efd9a0"/><stop offset="0.7" stop-color="#c9a961"/><stop offset="1" stop-color="#94722f"/>
+    </radialGradient></defs>
+    <circle cx="${c}" cy="${c}" r="${rRim}" fill="url(#rim-${course.id})" stroke="#7a5e26" stroke-width="1"/>
+    <circle cx="${c}" cy="${c}" r="${rTrack}" fill="#efe7d4"/>
+    ${ring}
+    <circle cx="${c}" cy="${c}" r="${rInner}" fill="${face.enamel}" stroke="#94722f" stroke-width="1.5"/>
+    <text x="${c}" y="${c - 26}" font-size="8" fill="${face.ink}" text-anchor="middle" font-family="Oswald,sans-serif" letter-spacing="2" opacity="0.85">PLAY4THECOIN</text>
+    ${nameSvg}
+    <text x="${c}" y="${c + 18}" font-size="9" fill="${face.ink}" text-anchor="middle" font-family="Oswald,sans-serif" letter-spacing="1.5" opacity="0.85">PAR ${course.par || 72}</text>
+    <text x="${c}" y="${c + 32}" font-size="8" fill="${face.ink}" text-anchor="middle" font-family="Oswald,sans-serif" letter-spacing="1" opacity="0.7">SIG HOLE ${course.signatureHole || ''}</text>
+    ${locked ? `<circle cx="${c}" cy="${c}" r="${rRim}" fill="rgba(10,10,10,.55)"/><text x="${c}" y="${c + 5}" font-size="22" text-anchor="middle">🔒</text>` : ''}
+  </svg>`;
+}
+
 const TABS = [
   { id: 'home', label: 'Home' },
   { id: 'enter', label: 'Enter', needsUser: true },
   { id: 'activate', label: 'Activate', needsUser: true },
   { id: 'play', label: 'Play', needsUser: true },
+  { id: 'gps', label: 'Rangefinder' },
+  { id: 'coins', label: 'The Coins' },
   { id: 'courses', label: 'Courses' },
   { id: 'leaderboard', label: 'Leaderboard' },
   { id: 'stats', label: 'My Stats', needsUser: true },
@@ -1168,6 +1373,7 @@ function renderTabs() {
 }
 
 async function go(view) {
+  if (view !== 'gps') { stopGeo(); stopCam(); } // release GPS + camera when leaving the rangefinder
   state.view = view;
   renderTabs();
   if (state.userId) { try { state.me = (await api.get('/me/' + state.userId)); } catch { state.me = null; localStorage.removeItem('p4tc_user'); state.userId = null; } }
@@ -1344,6 +1550,168 @@ afterRender.play = () => {
     toast(`Verified · ${r.points} league points`);
     go('play');
   });
+};
+
+views.coins = async () => {
+  const owned = new Set((state.me?.coins || []).map(c => c.courseId));
+  const details = await Promise.all(state.boot.courses.map(c => api.get('/course/' + c.id).catch(() => null)));
+  const cards = details.filter(Boolean).map(d => {
+    const has = owned.has(d.id);
+    return `<div class="coin-card">
+      <div class="coin-wrap">${courseCoinSvg(d, d.holes, { locked: state.me ? !has : false })}</div>
+      <div class="coin-meta">
+        <div class="label">${d.name}${d.isFinal ? ' ★' : ''}</div>
+        <div class="stat-sub">${d.region} · Par ${d.par || 72} · Sig hole ${d.signatureHole}</div>
+        ${state.me ? `<span class="pill">${has ? 'In your wallet' : 'Not collected'}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  const collected = state.me ? owned.size : 0;
+  return `<div class="view">
+    <span class="eyebrow">The collectible set · 5 courses · 1 champion</span>
+    <h1 class="title display">The Coins</h1>
+    <p class="lead">Each course has its own numbered, dual-face collectible coin — a metallic rim carrying the
+      hole-by-hole scorecard, the course colours and signature hole on the face, and Play4TheCoin on every coin.
+      One face is the course; the other carries the Lexus headline mark. Collect all five.${state.me ? ` <span class="gold">You hold ${collected} of 5.</span>` : ''}</p>
+    <div class="coin-grid">${cards}</div>
+    <p class="disclaimer">Coins are rendered live from each course's verified scorecard data. Physical coins are die-struck enamel; the digital twin is what transfers in play. Lexus on the sponsor face; figures and branding subject to signed headline terms.</p>
+  </div>`;
+};
+
+views.gps = async () => {
+  const courses = state.boot.courses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  const holes = Array.from({ length: 18 }, (_, i) => `<option value="${i + 1}">Hole ${i + 1}</option>`).join('');
+  return `<div class="view">
+    <span class="eyebrow">Live GPS · hole map · camera aim · Powered by Lexus</span>
+    <h1 class="title display">GPS &amp; Hole View</h1>
+    <p class="lead">Pick your course and hole and you've got it in your hand — the layout (dogleg, hazards, trees), the distances, and a live "to the pin" that counts down as you walk. Enable GPS to range it, or aim your camera down the hole to read the number at a glance.</p>
+    <div class="row" style="gap:10px;max-width:520px">
+      <label class="field" style="flex:1"><span class="label">Course</span><select id="gpsCourse">${courses}</select></label>
+      <label class="field" style="width:130px"><span class="label">Hole</span><select id="gpsHole">${holes}</select></label>
+    </div>
+    <div class="gps-layout">
+      <div class="holemap-wrap" id="holeMap"><div class="stat-sub" style="padding:30px;text-align:center">Loading hole…</div></div>
+      <div class="gps-side">
+        <div class="card">
+          <div class="row" style="justify-content:space-between">
+            <span class="label">Your position</span>
+            <span class="pill" id="gpsStatus">GPS off</span>
+          </div>
+          <div id="gpsReadout" class="stat-sub" style="margin-top:8px">Enable GPS — your browser will ask for location permission.</div>
+          <div class="row" style="margin-top:12px;gap:8px">
+            <button class="cta" id="gpsEnable">Enable GPS</button>
+            <button class="ghost" id="gpsCam">📷 Aim camera</button>
+          </div>
+        </div>
+        <span class="label" style="display:block;margin:18px 0 10px">Distance to targets</span>
+        <div class="grid cols-3" id="gpsDistances">
+          <div class="card gps-target" data-key="front"><span class="label">Front</span><div class="stat" data-dist="front">—</div><button class="ghost" data-mark="front" disabled>Mark</button></div>
+          <div class="card gps-target" data-key="centre"><span class="label">Centre</span><div class="stat" data-dist="centre">—</div><button class="ghost" data-mark="centre" disabled>Mark</button></div>
+          <div class="card gps-target" data-key="back"><span class="label">Back</span><div class="stat" data-dist="back">—</div><button class="ghost" data-mark="back" disabled>Mark</button></div>
+          <div class="card gps-target" data-key="pin"><span class="label">Pin 🚩</span><div class="stat" data-dist="pin">—</div><button class="ghost" data-mark="pin" disabled>Mark</button></div>
+          <div class="card gps-target" data-key="tee"><span class="label">Tee ⛳</span><div class="stat" data-dist="tee">—</div><button class="ghost" data-mark="tee" disabled>Mark</button></div>
+          <div class="card gps-target" data-key="lay"><span class="label">Layup</span><div class="stat" data-dist="lay">—</div><button class="ghost" data-mark="lay" disabled>Mark</button></div>
+        </div>
+      </div>
+    </div>
+    <div id="camOverlay" class="cam-overlay hidden">
+      <video id="camVideo" autoplay playsinline muted></video>
+      <div class="cam-hud">
+        <div class="cam-top"><span class="pill" id="camHole">—</span><button class="ghost" id="camClose">✕ Close</button></div>
+        <div class="cam-reticle">⊕</div>
+        <div class="cam-readout" id="camReadout">— m to pin</div>
+      </div>
+    </div>
+    <p class="disclaimer">Hole layouts are a representative plan view (corridor shape + hazards from the scorecard) — production uses mapped satellite coordinates. GPS distances are great-circle metres from your live fix (accuracy shown). The camera overlay shows your live GPS distance to the marked pin — a true optical/laser rangefinder is a native-app feature.</p>
+  </div>`;
+};
+afterRender.gps = () => {
+  const courseSel = document.getElementById('gpsCourse'), holeSel = document.getElementById('gpsHole');
+  const statusEl = document.getElementById('gpsStatus'), readout = document.getElementById('gpsReadout');
+  const enableBtn = document.getElementById('gpsEnable'), camBtn = document.getElementById('gpsCam');
+  const holeMapEl = document.getElementById('holeMap'), camReadout = document.getElementById('camReadout'), camHole = document.getElementById('camHole');
+  const markBtns = $app.querySelectorAll('button[data-mark]');
+  let detail = null;
+
+  // Live distance to the marked pin (falls back to green centre), or null if not ranged yet.
+  const pinDistance = () => {
+    const marks = loadMarks(courseSel.value, holeSel.value);
+    const target = marks.pin || marks.centre;
+    return (target && geo.pos) ? Math.round(metresBetween(geo.pos, target)) : null;
+  };
+
+  const renderMap = () => {
+    const h = detail && detail.holes[+holeSel.value - 1];
+    holeMapEl.innerHTML = h ? holeMapSvg(detail, h) : '<div class="stat-sub" style="padding:30px;text-align:center">Hole layout unavailable</div>';
+  };
+  const loadCourse = async () => {
+    holeMapEl.innerHTML = '<div class="stat-sub" style="padding:30px;text-align:center">Loading hole…</div>';
+    detail = await api.get('/course/' + courseSel.value).catch(() => null);
+    renderMap();
+  };
+
+  const render = () => {
+    const marks = loadMarks(courseSel.value, holeSel.value);
+    markBtns.forEach(b => {
+      const key = b.dataset.mark, distEl = $app.querySelector(`[data-dist="${key}"]`), marked = marks[key];
+      b.disabled = !geo.pos;
+      b.textContent = marked ? 'Re-mark' : 'Mark';
+      b.closest('.gps-target').classList.toggle('set', !!marked);
+      distEl.textContent = (marked && geo.pos) ? Math.round(metresBetween(geo.pos, marked)) + ' m' : (marked ? '· set ·' : '—');
+    });
+    const pd = pinDistance();
+    if (camReadout) camReadout.textContent = pd != null ? `${pd} m to pin` : 'Mark the pin to range it';
+  };
+
+  const onPos = (p) => {
+    geo.pos = { lat: p.coords.latitude, lng: p.coords.longitude };
+    geo.acc = p.coords.accuracy;
+    statusEl.textContent = `±${Math.round(geo.acc)}m`;
+    statusEl.classList.add('live');
+    readout.textContent = `${geo.pos.lat.toFixed(5)}, ${geo.pos.lng.toFixed(5)} · accuracy ±${Math.round(geo.acc)}m`;
+    render();
+  };
+  const onErr = (e) => {
+    statusEl.textContent = 'GPS blocked';
+    readout.textContent = e.code === 1
+      ? 'Location permission denied. Allow it in your browser to use the rangefinder.'
+      : 'Could not get a GPS fix — try again outdoors with a clear sky view.';
+  };
+
+  enableBtn.onclick = () => {
+    if (!navigator.geolocation) { readout.textContent = 'This device/browser has no Geolocation support.'; return; }
+    statusEl.textContent = 'Locating…';
+    readout.textContent = 'Waiting for a GPS fix…';
+    stopGeo();
+    geo.watchId = navigator.geolocation.watchPosition(onPos, onErr, { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 });
+  };
+
+  camBtn.onclick = async () => {
+    const ov = document.getElementById('camOverlay'), video = document.getElementById('camVideo');
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast('Camera not supported on this device'); return; }
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+      video.srcObject = camStream;
+      if (camHole) camHole.textContent = `${state.boot.courses.find(c => c.id === courseSel.value)?.name || ''} · Hole ${holeSel.value}`;
+      render();
+      ov.classList.remove('hidden');
+    } catch (e) { toast('Camera permission denied'); }
+  };
+  document.getElementById('camClose').onclick = stopCam;
+
+  markBtns.forEach(b => b.onclick = () => {
+    if (!geo.pos) return;
+    const marks = loadMarks(courseSel.value, holeSel.value);
+    marks[b.dataset.mark] = { ...geo.pos, at: Date.now() };
+    saveMarks(courseSel.value, holeSel.value, marks);
+    toast(`${b.dataset.mark} marked for hole ${holeSel.value}`);
+    render();
+  });
+
+  courseSel.onchange = () => { loadCourse(); render(); };
+  holeSel.onchange = () => { renderMap(); render(); if (camHole) camHole.textContent = `${state.boot.courses.find(c => c.id === courseSel.value)?.name || ''} · Hole ${holeSel.value}`; };
+  loadCourse();
+  render();
 };
 
 views.leaderboard = async () => {
@@ -1603,7 +1971,10 @@ function focusPanel() {
       <span class="label" style="font-size:15px">Hole ${h.hole}${h.hole === r.course.signatureHole ? ' ★' : ''} · Par ${h.par} · SI ${h.strokeIndex}</span>
       <span class="stat-sub">${h.distanceMeters ? h.distanceMeters + 'm' : '—'}</span>
     </div>
-    ${planView(h, shots)}
+    <div class="round-hole">
+      <div class="holemap-wrap round-map">${holeMapSvg(r.course, h)}</div>
+      <div class="round-tracer">${planView(h, shots)}</div>
+    </div>
     <div class="gps-grid">
       <div class="g"><div class="n">${g.toFront}</div><div class="l">To front</div></div>
       <div class="g"><div class="n">${g.toPin}</div><div class="l">To pin</div></div>
