@@ -259,6 +259,14 @@ td .target { cursor: pointer; color: var(--gold); font-size: 11px; font-family: 
 .card-photo { margin: -1px -20px 14px; height: 130px; overflow: hidden; }
 .card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+/* camera tilt-rangefinder controls */
+.cam-aim-help { margin-top: auto; color: rgba(255,255,255,.9); font-family: 'Jost',sans-serif; font-size: 13px; text-align: center; text-shadow: 0 0 6px #000; padding: 0 24px; max-width: 420px; }
+.cam-aim-help b { color: var(--gold-l); }
+.cam-gps { color: #cfe8d6; font-family: 'Oswald',sans-serif; letter-spacing: .1em; font-size: 12px; text-shadow: 0 0 6px #000; min-height: 14px; }
+.cam-controls { display: flex; align-items: center; gap: 14px; pointer-events: auto; margin-bottom: 6px; flex-wrap: wrap; justify-content: center; }
+.cam-eye { font-family: 'Oswald',sans-serif; text-transform: uppercase; letter-spacing: .12em; font-size: 11px; color: #fff; background: rgba(0,0,0,.5); padding: 6px 10px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px; }
+.cam-eye input { width: 60px; margin: 0; padding: 5px 7px; text-align: center; }
+
 </style>
 </head>
 <body>
@@ -1302,10 +1310,24 @@ function stopGeo() {
   if (geo.watchId != null && navigator.geolocation) navigator.geolocation.clearWatch(geo.watchId);
   geo.watchId = null;
 }
-// Camera viewfinder ("aim at the hole"): live rear-camera feed with the GPS distance overlaid.
-let camStream = null;
+// Camera viewfinder ("aim at the target"): live rear-camera feed with a distance overlay.
+// Distance comes from the phone's tilt (no laser needed): aiming at the base of a target a known
+// eye-height above flat ground, depression angle α below horizontal gives d = height / tan(α).
+let camStream = null, camTimer = null;
+const orient = { beta: null };
+function onOrient(e) { if (e.beta != null) orient.beta = e.beta; }
+// Estimated ground distance (m) to where the reticle points, from pitch `beta` (deg) + eye height.
+function tiltMeters(beta, eyeH) {
+  if (beta == null) return null;
+  const alpha = 90 - beta;                 // depression below horizontal (portrait: beta≈90 at horizon)
+  if (alpha <= 0.6) return null;           // at/above horizon → effectively infinite
+  if (alpha >= 80) return +(eyeH * Math.tan((90 - 80) * Math.PI / 180)).toFixed(1); // ~at your feet
+  return eyeH / Math.tan(alpha * Math.PI / 180);
+}
 function stopCam() {
   if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  if (camTimer) { clearInterval(camTimer); camTimer = null; }
+  window.removeEventListener('deviceorientation', onOrient);
   const ov = document.getElementById('camOverlay'); if (ov) ov.classList.add('hidden');
 }
 // Marked points (green/tee/pin) are stored per course+hole in localStorage so a demo
@@ -1638,10 +1660,16 @@ views.gps = async () => {
       <div class="cam-hud">
         <div class="cam-top"><span class="pill" id="camHole">—</span><button class="ghost" id="camClose">✕ Close</button></div>
         <div class="cam-reticle">⊕</div>
-        <div class="cam-readout" id="camReadout">— m to pin</div>
+        <div class="cam-aim-help" id="camHelp">Aim the ⊕ at the <b>base</b> of the target, hold steady, then Capture</div>
+        <div class="cam-readout" id="camReadout">tilt down to range</div>
+        <div class="cam-gps" id="camGps"></div>
+        <div class="cam-controls">
+          <label class="cam-eye">Eye height <input id="camEye" type="number" value="1.6" step="0.05" min="0.5" max="2.5" /> m</label>
+          <button class="cta" id="camCapture">Capture (3s)</button>
+        </div>
       </div>
     </div>
-    <p class="disclaimer">Hole layouts are a representative plan view (corridor shape + hazards from the scorecard) — production uses mapped satellite coordinates. GPS distances are great-circle metres from your live fix (accuracy shown). The camera overlay shows your live GPS distance to the marked pin — a true optical/laser rangefinder is a native-app feature.</p>
+    <p class="disclaimer">Hole layouts are a representative plan view (corridor shape + hazards from the scorecard) — production uses mapped satellite coordinates. GPS distances are great-circle metres from your live fix (accuracy shown). <b>Aim camera</b> estimates distance from the phone's tilt — aim the ⊕ at the <b>base</b> of a target on roughly level ground, set your eye height, hold steady and Capture. It works anywhere (your garden, across a dam — no course data needed); accuracy depends on level ground + eye height. A phone can't laser-range what you point at — true rangefinding needs the GPS-to-mapped-pin (on course) or a hardware laser.</p>
   </div>`;
 };
 afterRender.gps = () => {
@@ -1678,8 +1706,6 @@ afterRender.gps = () => {
       b.closest('.gps-target').classList.toggle('set', !!marked);
       distEl.textContent = (marked && geo.pos) ? Math.round(metresBetween(geo.pos, marked)) + ' m' : (marked ? '· set ·' : '—');
     });
-    const pd = pinDistance();
-    if (camReadout) camReadout.textContent = pd != null ? `${pd} m to pin` : 'Mark the pin to range it';
   };
 
   const onPos = (p) => {
@@ -1707,13 +1733,42 @@ afterRender.gps = () => {
 
   camBtn.onclick = async () => {
     const ov = document.getElementById('camOverlay'), video = document.getElementById('camVideo');
+    const camGps = document.getElementById('camGps'), camEye = document.getElementById('camEye');
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast('Camera not supported on this device'); return; }
     try {
       camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
       video.srcObject = camStream;
       if (camHole) camHole.textContent = `${state.boot.courses.find(c => c.id === courseSel.value)?.name || ''} · Hole ${holeSel.value}`;
-      render();
+      // iOS 13+ needs an explicit gesture-triggered permission for motion/orientation.
+      try { if (typeof DeviceOrientationEvent !== 'undefined' && DeviceOrientationEvent.requestPermission) await DeviceOrientationEvent.requestPermission(); } catch (_) {}
+      window.addEventListener('deviceorientation', onOrient);
       ov.classList.remove('hidden');
+      let captured = null, capturing = 0, samples = [];
+      if (camTimer) clearInterval(camTimer);
+      camTimer = setInterval(() => {
+        const eyeH = Math.max(0.5, Math.min(2.5, parseFloat(camEye.value) || 1.6));
+        const live = tiltMeters(orient.beta, eyeH);
+        if (capturing > 0) {
+          if (live != null) samples.push(live);
+          capturing--;
+          camReadout.textContent = `Hold… ${Math.ceil(capturing / 5)}s`;
+          if (capturing === 0 && samples.length) {
+            captured = samples.reduce((a, b) => a + b, 0) / samples.length;
+            samples = [];
+          }
+        } else if (captured != null) {
+          camReadout.textContent = `≈ ${Math.round(captured)} m`;
+        } else if (orient.beta == null) {
+          camReadout.textContent = 'tilt sensor off';
+        } else if (live == null) {
+          camReadout.textContent = 'aim lower';
+        } else {
+          camReadout.textContent = `≈ ${Math.round(live)} m`;
+        }
+        const pd = pinDistance();
+        camGps.textContent = pd != null ? `GPS to marked pin: ${pd} m` : '';
+      }, 200);
+      document.getElementById('camCapture').onclick = () => { captured = null; samples = []; capturing = 15; }; // ~3s @200ms
     } catch (e) { toast('Camera permission denied'); }
   };
   document.getElementById('camClose').onclick = stopCam;
