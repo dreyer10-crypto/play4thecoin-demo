@@ -1555,6 +1555,8 @@ afterRender.activate = () => {
 };
 
 views.play = async () => {
+  // An active round IS the Play tab — the live per-hole scorecard.
+  if (state.round) { try { state.round.contests = await api.get('/contests'); } catch (e) { /* non-fatal */ } return renderRound(); }
   const courses = state.boot.courses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
   const scores = (state.me?.scores || []).slice().reverse();
   const scoreList = scores.map(s => {
@@ -1565,23 +1567,25 @@ views.play = async () => {
     </div>`;
   }).join('');
   return `<div class="view">
-    <span class="eyebrow">Step 3 · Capture & verify score</span>
-    <h1 class="title display">Log Your Round</h1>
-    <p class="lead">Enter your Stableford points. A round stays PENDING until a playing partner or marshal confirms it — only verified scores earn league points and move the leaderboard.</p>
-    <form id="scoreForm" class="card" style="max-width:520px">
+    <span class="eyebrow">Step 3 · Play your round — hole by hole</span>
+    <h1 class="title display">Play a Round</h1>
+    <p class="lead">Pick your course and play it hole by hole. Enter your gross on each hole — the app applies your course handicap (strokes by stroke index) and gives live <span class="gold">Stableford points per hole</span> plus a running total. Tap a hole's 🎯 for the rangefinder &amp; layout before you tee off.</p>
+    <form id="startRoundForm" class="card" style="max-width:520px">
       <label class="field"><span class="label">Course</span><select name="courseId">${courses}</select></label>
-      <label class="field"><span class="label">Stableford points</span><input name="stableford" type="number" min="0" max="60" required placeholder="e.g. 38" /></label>
-      <button class="cta" type="submit">Submit score →</button>
+      <button class="cta" type="submit">Start scorecard →</button>
+      <p class="disclaimer" style="margin-top:12px">Your course handicap is set from your handicap + division allowance; strokes are given on the hardest holes by stroke index. A finished round stays PENDING until a playing partner / marshal verifies it.</p>
     </form>
     ${scoreList ? `<span class="label" style="display:block;margin:24px 0 12px">Your rounds</span><div class="grid" style="max-width:620px">${scoreList}</div>` : ''}
   </div>`;
 };
 afterRender.play = () => {
-  document.getElementById('scoreForm').onsubmit = async (e) => {
+  if (state.round) { wireRound(); return; }
+  const sf = document.getElementById('startRoundForm');
+  if (sf) sf.onsubmit = async (e) => {
     e.preventDefault();
-    const fd = new FormData(e.target);
-    await api.post('/score', { userId: state.userId, courseId: fd.get('courseId'), stableford: fd.get('stableford') });
-    toast('Score submitted · pending verification');
+    const courseId = new FormData(e.target).get('courseId');
+    const r = await api.post('/round/start', { userId: state.userId, courseId });
+    state.round = { roundId: r.round.id, course: r.course, card: null, courseHcp: r.courseHcp, division: r.division, focus: 1, shotsByHole: {} };
     go('play');
   };
   $app.querySelectorAll('button[data-score]').forEach(b => b.onclick = async () => {
@@ -1964,7 +1968,6 @@ function confBadge(conf) {
 }
 
 views.courses = async () => {
-  if (state.round) { try { state.round.contests = await api.get('/contests'); } catch (e) { /* non-fatal */ } return renderRound(); }
   if (state.selectedCourse) return await renderCourseDetail(state.selectedCourse);
   const cards = state.boot.courses.map(c => {
     const stem = COURSE_PHOTO[c.id];
@@ -2106,29 +2109,33 @@ afterRender.courses = () => {
   });
   const back = document.getElementById('backCourses');
   if (back) back.onclick = () => { state.selectedCourse = null; go('courses'); };
+  // "Play hole-by-hole" from a course page starts the round and hands off to the Play tab.
   const play = $app.querySelector('[data-play]');
   if (play) play.onclick = async () => {
     const r = await api.post('/round/start', { userId: state.userId, courseId: play.dataset.play });
     state.round = { roundId: r.round.id, course: r.course, card: null, courseHcp: r.courseHcp, division: r.division, focus: 1, shotsByHole: {} };
-    state.selectedCourse = null; go('courses');
+    state.selectedCourse = null; go('play');
   };
+};
+
+// Wires the live per-hole scorecard (rendered under the Play tab via renderRound).
+function wireRound() {
   $app.querySelectorAll('input[data-hole]').forEach(inp => inp.onchange = async () => {
     const r = await api.post('/round/hole', { roundId: state.round.roundId, hole: Number(inp.dataset.hole), gross: inp.value });
-    state.round.card = r.card; go('courses');
+    state.round.card = r.card; go('play');
   });
-  // GPS / shot-tracer wiring
-  $app.querySelectorAll('[data-focus]').forEach(el => el.onclick = () => { state.round.focus = Number(el.dataset.focus); go('courses'); });
+  $app.querySelectorAll('[data-focus]').forEach(el => el.onclick = () => { state.round.focus = Number(el.dataset.focus); go('play'); });
   const addShot = document.getElementById('addShot');
   if (addShot) addShot.onclick = async () => {
     const v = document.getElementById('shotDist').value;
     if (!v) return;
     const r = await api.post('/round/shot', { roundId: state.round.roundId, hole: state.round.focus, distance: v });
-    state.round.shotsByHole[state.round.focus] = r.shots; go('courses');
+    state.round.shotsByHole[state.round.focus] = r.shots; go('play');
   };
   const undoShot = document.getElementById('undoShot');
   if (undoShot) undoShot.onclick = async () => {
     const r = await api.post('/round/shot', { roundId: state.round.roundId, hole: state.round.focus, distance: 'undo' });
-    state.round.shotsByHole[state.round.focus] = r.shots; go('courses');
+    state.round.shotsByHole[state.round.focus] = r.shots; go('play');
   };
   const fin = document.getElementById('finishRound');
   if (fin) fin.onclick = async () => {
@@ -2136,8 +2143,8 @@ afterRender.courses = () => {
     state.round = null; toast(`Round in — ${r.card.stablefordTotal} pts, pending verification`); go('play');
   };
   const can = document.getElementById('cancelRound');
-  if (can) can.onclick = () => { state.round = null; go('courses'); };
-};
+  if (can) can.onclick = () => { state.round = null; go('play'); };
+}
 
 function renderChallengeCard(c) {
   const me = state.userId;
